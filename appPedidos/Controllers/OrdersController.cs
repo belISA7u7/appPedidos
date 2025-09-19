@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using appPedidos.Data;
 using appPedidos.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace appPedidos.Controllers
 {
@@ -19,9 +19,19 @@ namespace appPedidos.Controllers
             _context = context;
         }
 
+        // Método auxiliar para restringir acceso a admin o empleado
+        private bool IsAdminOrEmpleado()
+        {
+            var role = HttpContext.Session.GetString("UserRole");
+            return role == "admin" || role == "empleado";
+        }
+
         // GET: Orders
         public async Task<IActionResult> Index()
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             var applicationDbContext = _context.Orders.Include(o => o.Cliente);
             return View(await applicationDbContext.ToListAsync());
         }
@@ -29,18 +39,18 @@ namespace appPedidos.Controllers
         // GET: Orders/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var order = await _context.Orders
                 .Include(o => o.Cliente)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (order == null)
-            {
                 return NotFound();
-            }
 
             return View(order);
         }
@@ -48,22 +58,35 @@ namespace appPedidos.Controllers
         // GET: Orders/Create
         public IActionResult Create()
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             ViewData["ClienteId"] = new SelectList(_context.Users, "Id", "Email");
             return View();
         }
 
         // POST: Orders/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,ClienteId,Fecha,Estado,Total")] Order order)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (ModelState.IsValid)
             {
-                _context.Add(order);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    // Lógica para calcular total y validar stock debería ir aquí en el futuro
+                    _context.Add(order);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Pedido creado correctamente.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Error al crear el pedido: " + ex.Message);
+                }
             }
             ViewData["ClienteId"] = new SelectList(_context.Users, "Id", "Email", order.ClienteId);
             return View(order);
@@ -72,51 +95,52 @@ namespace appPedidos.Controllers
         // GET: Orders/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var order = await _context.Orders.FindAsync(id);
             if (order == null)
-            {
                 return NotFound();
-            }
+
             ViewData["ClienteId"] = new SelectList(_context.Users, "Id", "Email", order.ClienteId);
             return View(order);
         }
 
         // POST: Orders/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,ClienteId,Fecha,Estado,Total")] Order order)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (id != order.Id)
-            {
                 return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // Lógica de actualización de totales y validaciones puede ir aquí
                     _context.Update(order);
                     await _context.SaveChangesAsync();
+                    TempData["Success"] = "Pedido actualizado correctamente.";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!OrderExists(order.Id))
-                    {
                         return NotFound();
-                    }
                     else
-                    {
-                        throw;
-                    }
+                        ModelState.AddModelError("", "Error de concurrencia al actualizar el pedido.");
                 }
-                return RedirectToAction(nameof(Index));
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Error al actualizar el pedido: " + ex.Message);
+                }
             }
             ViewData["ClienteId"] = new SelectList(_context.Users, "Id", "Email", order.ClienteId);
             return View(order);
@@ -125,18 +149,18 @@ namespace appPedidos.Controllers
         // GET: Orders/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var order = await _context.Orders
                 .Include(o => o.Cliente)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (order == null)
-            {
                 return NotFound();
-            }
 
             return View(order);
         }
@@ -146,13 +170,27 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order != null)
-            {
-                _context.Orders.Remove(order);
-            }
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                var order = await _context.Orders.FindAsync(id);
+                if (order != null)
+                {
+                    _context.Orders.Remove(order);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Pedido eliminado correctamente.";
+                }
+                else
+                {
+                    TempData["Error"] = "Pedido no encontrado.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al eliminar el pedido: " + ex.Message;
+            }
             return RedirectToAction(nameof(Index));
         }
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using appPedidos.Data;
 using appPedidos.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace appPedidos.Controllers
 {
@@ -19,16 +19,31 @@ namespace appPedidos.Controllers
             _context = context;
         }
 
+        // Solo admin o empleado pueden gestionar los items de pedido
+        private bool IsAdminOrEmpleado()
+        {
+            var role = HttpContext.Session.GetString("UserRole");
+            return role == "admin" || role == "empleado";
+        }
+
         // GET: OrderItems
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.OrderItems.Include(o => o.Order).Include(o => o.Producto);
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
+            var applicationDbContext = _context.OrderItems
+                .Include(o => o.Order)
+                .Include(o => o.Producto);
             return View(await applicationDbContext.ToListAsync());
         }
 
         // GET: OrderItems/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (id == null)
             {
                 return NotFound();
@@ -49,23 +64,54 @@ namespace appPedidos.Controllers
         // GET: OrderItems/Create
         public IActionResult Create()
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             ViewData["OrderId"] = new SelectList(_context.Orders, "Id", "Id");
             ViewData["ProductoId"] = new SelectList(_context.Products, "Id", "Nombre");
             return View();
         }
 
         // POST: OrderItems/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,OrderId,ProductoId,Cantidad,Subtotal")] OrderItem orderItem)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (ModelState.IsValid)
             {
-                _context.Add(orderItem);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                // Validación de stock
+                var producto = await _context.Products.FindAsync(orderItem.ProductoId);
+                if (producto == null)
+                {
+                    ModelState.AddModelError("", "Producto no encontrado.");
+                }
+                else if (orderItem.Cantidad > producto.Stock)
+                {
+                    ModelState.AddModelError("", "No hay suficiente stock para este producto.");
+                }
+                else
+                {
+                    // Calcular subtotal (puedes mejorar esto usando propiedades calculadas)
+                    orderItem.Subtotal = producto.Precio * orderItem.Cantidad;
+
+                    // Actualizar stock del producto
+                    producto.Stock -= orderItem.Cantidad;
+
+                    try
+                    {
+                        _context.Add(orderItem);
+                        await _context.SaveChangesAsync();
+                        TempData["Success"] = "Item agregado correctamente.";
+                        return RedirectToAction(nameof(Index));
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("", "Error al agregar el item: " + ex.Message);
+                    }
+                }
             }
             ViewData["OrderId"] = new SelectList(_context.Orders, "Id", "Id", orderItem.OrderId);
             ViewData["ProductoId"] = new SelectList(_context.Products, "Id", "Nombre", orderItem.ProductoId);
@@ -75,6 +121,9 @@ namespace appPedidos.Controllers
         // GET: OrderItems/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (id == null)
             {
                 return NotFound();
@@ -91,12 +140,13 @@ namespace appPedidos.Controllers
         }
 
         // POST: OrderItems/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,OrderId,ProductoId,Cantidad,Subtotal")] OrderItem orderItem)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (id != orderItem.Id)
             {
                 return NotFound();
@@ -106,8 +156,27 @@ namespace appPedidos.Controllers
             {
                 try
                 {
-                    _context.Update(orderItem);
-                    await _context.SaveChangesAsync();
+                    // Validar stock
+                    var producto = await _context.Products.FindAsync(orderItem.ProductoId);
+                    if (producto == null)
+                    {
+                        ModelState.AddModelError("", "Producto no encontrado.");
+                    }
+                    else if (orderItem.Cantidad > producto.Stock)
+                    {
+                        ModelState.AddModelError("", "No hay suficiente stock para este producto.");
+                    }
+                    else
+                    {
+                        // Actualizar subtotal y stock
+                        orderItem.Subtotal = producto.Precio * orderItem.Cantidad;
+                        // (Opcional: ajustar stock si la cantidad cambió, lógica extra requerida)
+
+                        _context.Update(orderItem);
+                        await _context.SaveChangesAsync();
+                        TempData["Success"] = "Item actualizado correctamente.";
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -117,10 +186,13 @@ namespace appPedidos.Controllers
                     }
                     else
                     {
-                        throw;
+                        ModelState.AddModelError("", "Error de concurrencia al actualizar el item.");
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Error al actualizar el item: " + ex.Message);
+                }
             }
             ViewData["OrderId"] = new SelectList(_context.Orders, "Id", "Id", orderItem.OrderId);
             ViewData["ProductoId"] = new SelectList(_context.Products, "Id", "Nombre", orderItem.ProductoId);
@@ -130,6 +202,9 @@ namespace appPedidos.Controllers
         // GET: OrderItems/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (id == null)
             {
                 return NotFound();
@@ -152,13 +227,31 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var orderItem = await _context.OrderItems.FindAsync(id);
-            if (orderItem != null)
-            {
-                _context.OrderItems.Remove(orderItem);
-            }
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                var orderItem = await _context.OrderItems.FindAsync(id);
+                if (orderItem != null)
+                {
+                    // (Opcional: restaurar stock del producto si se elimina el item)
+                    // var producto = await _context.Products.FindAsync(orderItem.ProductoId);
+                    // if (producto != null) producto.Stock += orderItem.Cantidad;
+
+                    _context.OrderItems.Remove(orderItem);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Item eliminado correctamente.";
+                }
+                else
+                {
+                    TempData["Error"] = "Item no encontrado.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al eliminar el item: " + ex.Message;
+            }
             return RedirectToAction(nameof(Index));
         }
 

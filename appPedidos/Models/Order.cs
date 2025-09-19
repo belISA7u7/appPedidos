@@ -1,13 +1,21 @@
-﻿namespace appPedidos.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+public class Order
 {
-    public class Order
-    {
-        public int Id { get; set; }
-        public int ClienteId { get; set; }
-        public User Cliente { get; set; }
-        public DateTime Fecha { get; set; }
-        public string Estado { get; set; } // Pendiente, procesado, enviado, entregado
-        public decimal Total { get; set; }
-        public ICollection<OrderItem> Items { get; set; }
-    }
+    public int Id { get; set; }
+
+    [Required]
+    public int ClienteId { get; set; }
+
+    [Required]
+    public DateTime Fecha { get; set; } = DateTime.Now;
+
+    [Required]
+    public string Estado { get; set; }
+
+    [Range(0, double.MaxValue, ErrorMessage = "El total no puede ser negativo.")]
+    public decimal Total { get; set; }
+
+    // Navigation property
+    public User Cliente { get; set; }
 }

@@ -1,17 +1,21 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace appPedidos.Models
+public class Product
 {
-    public class Product
-    {
-        public int Id { get; set; }
-        [Required, StringLength(100)]
-        public string Nombre { get; set; }
-        [StringLength(200)]
-        public string Descripcion { get; set; }
-        [Range(0.01, double.MaxValue)]
-        public decimal Precio { get; set; }
-        [Range(0, int.MaxValue)]
-        public int Stock { get; set; }
-    }
+    public int Id { get; set; }
+
+    [Required(ErrorMessage = "El nombre es obligatorio.")]
+    [StringLength(100, ErrorMessage = "El nombre no puede exceder 100 caracteres.")]
+    public string Nombre { get; set; }
+
+    [StringLength(300, ErrorMessage = "La descripción no puede exceder 300 caracteres.")]
+    public string Descripcion { get; set; }
+
+    [Required(ErrorMessage = "El precio es obligatorio.")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor que 0.")]
+    public decimal Precio { get; set; }
+
+    [Required(ErrorMessage = "El stock es obligatorio.")]
+    [Range(0, int.MaxValue, ErrorMessage = "El stock no puede ser negativo.")]
+    public int Stock { get; set; }
 }

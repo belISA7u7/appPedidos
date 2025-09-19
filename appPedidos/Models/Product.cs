@@ -1,4 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿namespace appPedidos.Models;
+using System.ComponentModel.DataAnnotations;
+using System;
+
 
 public class Product
 {

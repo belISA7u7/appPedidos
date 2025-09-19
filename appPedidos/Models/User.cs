@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿namespace appPedidos.Models;
+using System.ComponentModel.DataAnnotations;
 
 public class User
 {

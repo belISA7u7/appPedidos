@@ -52,6 +52,14 @@ namespace appPedidos.Controllers
             if (order == null)
                 return NotFound();
 
+            // Obtener los OrderItems relacionados
+            var orderItems = await _context.OrderItems
+                .Include(oi => oi.Producto)
+                .Where(oi => oi.OrderId == order.Id)
+                .ToListAsync();
+
+            ViewBag.OrderItems = orderItems;
+
             return View(order);
         }
 
@@ -68,20 +76,25 @@ namespace appPedidos.Controllers
         // POST: Orders/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,ClienteId,Fecha,Estado,Total")] Order order)
+        public async Task<IActionResult> Create([Bind("ClienteId")] Order order)
         {
             if (!IsAdminOrEmpleado())
                 return RedirectToAction("Login", "Users");
+
+            // Asignar fecha y estado por defecto
+            order.Fecha = DateTime.Now;
+            order.Estado = "Pendiente";
+            order.Total = 0;
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Lógica para calcular total y validar stock debería ir aquí en el futuro
                     _context.Add(order);
                     await _context.SaveChangesAsync();
                     TempData["Success"] = "Pedido creado correctamente.";
-                    return RedirectToAction(nameof(Index));
+                    // Redirigir a la edición para que agreguen items al pedido
+                    return RedirectToAction("Edit", new { id = order.Id });
                 }
                 catch (Exception ex)
                 {
@@ -101,9 +114,20 @@ namespace appPedidos.Controllers
             if (id == null)
                 return NotFound();
 
-            var order = await _context.Orders.FindAsync(id);
+            var order = await _context.Orders
+                .Include(o => o.Cliente)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
             if (order == null)
                 return NotFound();
+
+            // Obtener los OrderItems relacionados
+            var orderItems = await _context.OrderItems
+                .Include(oi => oi.Producto)
+                .Where(oi => oi.OrderId == order.Id)
+                .ToListAsync();
+
+            ViewBag.OrderItems = orderItems;
 
             ViewData["ClienteId"] = new SelectList(_context.Users, "Id", "Email", order.ClienteId);
             return View(order);
@@ -112,7 +136,7 @@ namespace appPedidos.Controllers
         // POST: Orders/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,ClienteId,Fecha,Estado,Total")] Order order)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,ClienteId,Fecha,Estado")] Order order)
         {
             if (!IsAdminOrEmpleado())
                 return RedirectToAction("Login", "Users");
@@ -124,7 +148,13 @@ namespace appPedidos.Controllers
             {
                 try
                 {
-                    // Lógica de actualización de totales y validaciones puede ir aquí
+                    // Recalcular total automáticamente sumando los subtotales de los OrderItems
+                    var orderItems = await _context.OrderItems
+                        .Where(oi => oi.OrderId == id)
+                        .ToListAsync();
+
+                    order.Total = orderItems.Sum(oi => oi.Subtotal);
+
                     _context.Update(order);
                     await _context.SaveChangesAsync();
                     TempData["Success"] = "Pedido actualizado correctamente.";
@@ -162,6 +192,14 @@ namespace appPedidos.Controllers
             if (order == null)
                 return NotFound();
 
+            // Obtener los OrderItems relacionados
+            var orderItems = await _context.OrderItems
+                .Include(oi => oi.Producto)
+                .Where(oi => oi.OrderId == order.Id)
+                .ToListAsync();
+
+            ViewBag.OrderItems = orderItems;
+
             return View(order);
         }
 
@@ -178,6 +216,11 @@ namespace appPedidos.Controllers
                 var order = await _context.Orders.FindAsync(id);
                 if (order != null)
                 {
+                    // Elimina primero los OrderItems asociados
+                    var orderItems = await _context.OrderItems.Where(oi => oi.OrderId == id).ToListAsync();
+                    if (orderItems.Any())
+                        _context.OrderItems.RemoveRange(orderItems);
+
                     _context.Orders.Remove(order);
                     await _context.SaveChangesAsync();
                     TempData["Success"] = "Pedido eliminado correctamente.";

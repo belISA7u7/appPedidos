@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using appPedidos.Data;
 using appPedidos.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace appPedidos.Controllers
 {
@@ -19,9 +18,17 @@ namespace appPedidos.Controllers
             _context = context;
         }
 
+        // Método auxiliar para restringir acceso a admin o empleado
+        private bool IsAdminOrEmpleado()
+        {
+            var role = HttpContext.Session.GetString("UserRole");
+            return role == "admin" || role == "empleado";
+        }
+
         // GET: Products
         public async Task<IActionResult> Index()
         {
+            // Todos pueden ver el listado; si quieres, puedes limitar aquí por rol.
             return View(await _context.Products.ToListAsync());
         }
 
@@ -46,21 +53,33 @@ namespace appPedidos.Controllers
         // GET: Products/Create
         public IActionResult Create()
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
             return View();
         }
 
         // POST: Products/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Nombre,Descripcion,Precio,Stock")] Product product)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (ModelState.IsValid)
             {
-                _context.Add(product);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _context.Add(product);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Producto agregado correctamente.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    // Manejo de error y mensaje amigable
+                    ModelState.AddModelError("", "Error al guardar el producto: " + ex.Message);
+                }
             }
             return View(product);
         }
@@ -68,6 +87,9 @@ namespace appPedidos.Controllers
         // GET: Products/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (id == null)
             {
                 return NotFound();
@@ -82,12 +104,13 @@ namespace appPedidos.Controllers
         }
 
         // POST: Products/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,Precio,Stock")] Product product)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (id != product.Id)
             {
                 return NotFound();
@@ -99,6 +122,8 @@ namespace appPedidos.Controllers
                 {
                     _context.Update(product);
                     await _context.SaveChangesAsync();
+                    TempData["Success"] = "Producto actualizado correctamente.";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -108,10 +133,13 @@ namespace appPedidos.Controllers
                     }
                     else
                     {
-                        throw;
+                        ModelState.AddModelError("", "Error de concurrencia al actualizar el producto.");
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Error al actualizar el producto: " + ex.Message);
+                }
             }
             return View(product);
         }
@@ -119,6 +147,9 @@ namespace appPedidos.Controllers
         // GET: Products/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
+
             if (id == null)
             {
                 return NotFound();
@@ -139,13 +170,27 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product != null)
-            {
-                _context.Products.Remove(product);
-            }
+            if (!IsAdminOrEmpleado())
+                return RedirectToAction("Login", "Users");
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                var product = await _context.Products.FindAsync(id);
+                if (product != null)
+                {
+                    _context.Products.Remove(product);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Producto eliminado correctamente.";
+                }
+                else
+                {
+                    TempData["Error"] = "Producto no encontrado.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al eliminar el producto: " + ex.Message;
+            }
             return RedirectToAction(nameof(Index));
         }
 

@@ -4,14 +4,14 @@
     var userRole = Context.Session.GetString("UserRole");
 }
 
-<h2 class="mb-4">Nuevo Pedido</h2>
+<h2 class="mb-4 text-center" style="color:#b76fdc;"><i class="bi bi-plus-circle"></i> Nuevo Pedido</h2>
 
 @if (TempData["Error"] != null)
 {
         <div class="alert alert-danger">@TempData["Error"]</div>
 }
 
-<div class="card">
+<div class="card mx-auto" style="max-width: 430px;">
     <div class="card-body">
         <form asp-action="Create" method="post">
             @if (userRole != "cliente")
@@ -22,9 +22,8 @@
                         <span asp-validation-for="ClienteId" class="text-danger"></span>
                     </div>
             }
-            <!-- Fecha y estado se asignan en el controlador -->
-            <button type="submit" class="btn btn-success">Crear Pedido</button>
-            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+            <button type="submit" class="btn btn-success w-100"><i class="bi bi-plus-circle"></i> Crear Pedido</button>
+            <a asp-action="Index" class="btn btn-link mt-3"><i class="bi bi-arrow-left"></i> Cancelar</a>
         </form>
     </div>
 </div>

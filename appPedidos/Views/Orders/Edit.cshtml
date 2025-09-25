@@ -5,7 +5,7 @@
     var userRole = Context.Session.GetString("UserRole");
 }
 
-<h2 class="mb-4">Editar Pedido</h2>
+<h2 class="mb-4 text-center" style="color:#b76fdc;"><i class="bi bi-pencil"></i> Editar Pedido</h2>
 
 @if (TempData["Success"] != null)
 {
@@ -16,7 +16,7 @@
         <div class="alert alert-danger">@TempData["Error"]</div>
 }
 
-<div class="card mb-4">
+<div class="card mb-4 mx-auto" style="max-width: 700px;">
     <div class="card-body">
         <form asp-action="Edit" method="post">
             <input type="hidden" asp-for="Id" />
@@ -51,13 +51,13 @@
                 <label asp-for="Total" class="form-label"></label>
                 <input class="form-control" asp-for="Total" readonly />
             </div>
-            <button type="submit" class="btn btn-primary">Guardar cambios</button>
-            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-save"></i> Guardar Cambios</button>
+            <a asp-action="Index" class="btn btn-link mt-3"><i class="bi bi-arrow-left"></i> Cancelar</a>
         </form>
     </div>
 </div>
 
-<h4>Productos en el Pedido</h4>
+<h4 class="mt-4"><i class="bi bi-basket2-heart"></i> Productos en el Pedido</h4>
 @if (orderItems != null && orderItems.Count > 0)
 {
         <table class="table table-striped">
@@ -79,13 +79,9 @@
                         <td>$@item.Producto?.Precio.ToString("0.00")</td>
                         <td>$@item.Subtotal.ToString("0.00")</td>
                         <td>
-                            <a asp-controller="OrderItems" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm me-1">
-                                <i class="bi bi-pencil"></i> Editar
-                            </a>
+                            <a asp-controller="OrderItems" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil"></i> Editar</a>
                             <form asp-controller="OrderItems" asp-action="Delete" asp-route-id="@item.Id" method="get" class="d-inline">
-                                <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                <button type="submit" class="btn btn-danger btn-sm" title="Eliminar"><i class="bi bi-trash"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -101,7 +97,7 @@ else
 }
 
 <hr />
-<h4>Agregar producto al pedido</h4>
+<h4 class="mt-4"><i class="bi bi-plus-circle"></i> Agregar producto al pedido</h4>
 <partial name="_AddOrderItemPartial" model="new appPedidos.Models.OrderItem { OrderId = Model.Id }" />
 
 @section Scripts {

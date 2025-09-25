@@ -1,54 +1,36 @@
 ﻿@model appPedidos.Models.Product
-
 @{
-    Layout = null;
+    ViewData["Title"] = "Nuevo Producto";
 }
 
-<!DOCTYPE html>
+<h2 class="mb-4 text-center" style="color:#c16ba5;"><i class="bi bi-plus-circle"></i> Nuevo Producto</h2>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Create</title>
-</head>
-<body>
-
-<h4>Product</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
+<div class="card mx-auto" style="max-width: 430px;">
+    <div class="card-body">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Nombre" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="Nombre" class="form-label"></label>
                 <input asp-for="Nombre" class="form-control" />
                 <span asp-validation-for="Nombre" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Descripcion" class="control-label"></label>
-                <input asp-for="Descripcion" class="form-control" />
+            <div class="mb-3">
+                <label asp-for="Descripcion" class="form-label"></label>
+                <textarea asp-for="Descripcion" class="form-control" rows="2"></textarea>
                 <span asp-validation-for="Descripcion" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Precio" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="Precio" class="form-label"></label>
                 <input asp-for="Precio" class="form-control" />
                 <span asp-validation-for="Precio" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Stock" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="Stock" class="form-label"></label>
                 <input asp-for="Stock" class="form-control" />
                 <span asp-validation-for="Stock" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
+            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-circle"></i> Crear Producto</button>
         </form>
     </div>
 </div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-</body>
-</html>
+<a asp-action="Index" class="btn btn-link mt-3"><i class="bi bi-arrow-left"></i> Volver a la lista</a>

@@ -1,13 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using appPedidos.Data;
 using appPedidos.Models;
-using Microsoft.AspNetCore.Http;
 using appPedidos.Filters;
-using Ganss.Xss;
 
 namespace appPedidos.Controllers
 {
@@ -21,17 +19,15 @@ namespace appPedidos.Controllers
             _context = context;
         }
 
-        // Todos los usuarios logueados pueden ver productos
+        // Todos los logueados pueden ver productos
         public async Task<IActionResult> Index(string searchString, decimal? minPrice, decimal? maxPrice)
         {
             var products = from p in _context.Products select p;
 
             if (!string.IsNullOrEmpty(searchString))
                 products = products.Where(p => p.Nombre.Contains(searchString));
-
             if (minPrice.HasValue)
                 products = products.Where(p => p.Precio >= minPrice.Value);
-
             if (maxPrice.HasValue)
                 products = products.Where(p => p.Precio <= maxPrice.Value);
 
@@ -41,28 +37,20 @@ namespace appPedidos.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
-
             var product = await _context.Products.FirstOrDefaultAsync(m => m.Id == id);
             if (product == null) return NotFound();
-
             return View(product);
         }
 
-        // Solo admin o empleado pueden crear productos
+        // Solo admin y empleado pueden crear productos
         [RequireRole("admin", "empleado")]
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
         [HttpPost]
         [RequireRole("admin", "empleado")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Nombre,Descripcion,Precio,Stock")] Product product)
         {
-            var sanitizer = new HtmlSanitizer();
-            product.Descripcion = sanitizer.Sanitize(product.Descripcion);
-
             if (ModelState.IsValid)
             {
                 try
@@ -94,9 +82,6 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,Precio,Stock")] Product product)
         {
-            var sanitizer = new HtmlSanitizer();
-            product.Descripcion = sanitizer.Sanitize(product.Descripcion);
-
             if (id != product.Id) return NotFound();
 
             if (ModelState.IsValid)
@@ -110,7 +95,7 @@ namespace appPedidos.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ProductExists(product.Id))
+                    if (!_context.Products.Any(e => e.Id == product.Id))
                         return NotFound();
                     else
                         ModelState.AddModelError("", "Error de concurrencia al actualizar el producto.");
@@ -149,11 +134,6 @@ namespace appPedidos.Controllers
                 TempData["Error"] = "Producto no encontrado.";
             }
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool ProductExists(int id)
-        {
-            return _context.Products.Any(e => e.Id == id);
         }
     }
 }

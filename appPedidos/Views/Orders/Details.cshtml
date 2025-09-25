@@ -4,9 +4,9 @@
     var orderItems = ViewBag.OrderItems as List<appPedidos.Models.OrderItem>;
 }
 
-<h2 class="mb-4">Detalle del Pedido</h2>
+<h2 class="mb-4 text-center" style="color:#b76fdc;"><i class="bi bi-eye"></i> Detalle del Pedido</h2>
 
-<div class="card mb-4">
+<div class="card mb-4 mx-auto" style="max-width: 700px;">
     <div class="card-body">
         <dl class="row">
             <dt class="col-sm-3">Cliente</dt>
@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<h4>Productos en el Pedido</h4>
+<h4 class="mt-4"><i class="bi bi-basket2-heart"></i> Productos en el Pedido</h4>
 @if (orderItems != null && orderItems.Count > 0)
 {
         <table class="table table-striped">

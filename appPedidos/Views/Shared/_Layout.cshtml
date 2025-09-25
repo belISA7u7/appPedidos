@@ -1,61 +1,132 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using Microsoft.AspNetCore.Http
+@{
+    var userRole = Context.Session.GetString("UserRole");
+}
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - appPedidos</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/appPedidos.styles.css" asp-append-version="true" />
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Gtvp1Yc2v9Qw8cE6YtN3lKfUQZkFUz8EwFq1GQ2cB2F4ZzZ2pDFL1K6F6qH6oU6F" crossorigin="anonymous">   
-    <!-- Bootstrap Icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css?family=Pacifico&display=swap" rel="stylesheet" />
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            min-height: 100vh;
+            /* Fondo suave */
+            background: linear-gradient(135deg, #fbeffb 0%, #e0c3fc 100%);
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            background: linear-gradient(90deg, #f6d4e6 30%, #bfaafc 100%);
+            box-shadow: 0 2px 10px rgba(191,170,252,0.08);
+        }
+        .navbar-brand {
+            font-family: 'Pacifico', cursive;
+            color: #c16ba5 !important;
+            font-size: 2rem;
+            letter-spacing: 1px;
+        }
+        .nav-link, .dropdown-item {
+            color: #6c3483 !important;
+            font-weight: 500;
+        }
+        .nav-link.active {
+            color: #d63384 !important;
+        }
+        .btn-primary, .btn-success, .btn-danger, .btn-info, .btn-warning {
+            border-radius: 1.5rem;
+        }
+        .card {
+            border-radius: 1.2rem;
+            box-shadow: 0 4px 24px #f4d4ee30;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .alert-success {
+            background: #ffe0f7;
+            color: #9d34a7;
+            border-color: #ffc9e7;
+        }
+        .alert-danger, .alert-warning {
+            background: #ffeaea;
+            color: #b10e47;
+            border-color: #ffc9c9;
+        }
+        .form-control, .form-select {
+            border-radius: 1rem;
+        }
+        .bg-gradient-fancy {
+            background: linear-gradient(135deg, #e0c3fc 0%, #fbeffb 100%);
+        }
+        .footer {
+            background: #f6d4e6;
+            color: #6c3483;
+            font-size: 0.95rem;
+            padding: 0.8rem 0;
+            border-top: 1px solid #f4d4ee;
+            text-align: center;
+            margin-top: auto;
+        }
+        main.container {
+            flex: 1 0 auto;
+        }
+    </style>
+    @RenderSection("Styles", required: false)
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">appPedidos</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Inicio</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Users" asp-action="Index">Usuarios</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Products" asp-action="Index">Productos</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Orders" asp-action="Index">Pedidos</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
+<body class="d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
         <div class="container">
-            &copy; 2025 - appPedidos - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <a class="navbar-brand" href="@Url.Action("Index", "Home")"><i class="bi bi-flower1"></i> appPedidos</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link @(ViewContext.RouteData.Values["controller"] as string == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index"><i class="bi bi-house-heart"></i> Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link @(ViewContext.RouteData.Values["controller"] as string == "Products" ? "active" : "")" asp-controller="Products" asp-action="Index"><i class="bi bi-bag-heart"></i> Productos</a></li>
+                    <li class="nav-item"><a class="nav-link @(ViewContext.RouteData.Values["controller"] as string == "Orders" ? "active" : "")" asp-controller="Orders" asp-action="Index"><i class="bi bi-box2-heart"></i> Pedidos</a></li>
+                    @if (userRole == "admin")
+                    {
+                            <li class="nav-item"><a class="nav-link @(ViewContext.RouteData.Values["controller"] as string == "Users" ? "active" : "")" asp-controller="Users" asp-action="Index"><i class="bi bi-people-fill"></i> Usuarios</a></li>
+                    }
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    @if (userRole != null)
+                    {
+                            <li class="nav-item">
+                                <span class="nav-link"><i class="bi bi-person-circle"></i> Hola, @userRole</span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Users" asp-action="Logout"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a>
+                            </li>
+                    }
+                    else
+                    {
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal"><i class="bi bi-box-arrow-in-right"></i> Iniciar sesión</a>
+                            </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <main class="container py-4 flex-grow-1">
+        @RenderBody()
+    </main>
+    <footer class="footer mt-auto">
+        <div class="container">
+            Hecho con <i class="bi bi-heart-fill" style="color:#e75480"></i> por <b>ISA</b> &copy; @DateTime.Now.Year
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-    <!-- Bootstrap JavaScript Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-ZENt8BzQw2W8Q7nQ0e4YxFQ9Q+6QG6Q7Q6l6U6F1K6F6qH6oU6F" crossorigin="anonymous"></script>
+    <!-- Modales Login y Registro igual que antes... (puedes copiar el modal de la respuesta anterior aquí) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

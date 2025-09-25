@@ -17,14 +17,13 @@ namespace appPedidos.Filters
             var userRole = session.GetString("UserRole");
             if (string.IsNullOrEmpty(userRole))
             {
-                // Si no está logueado, redirige a Login
+                // No logueado
                 context.Result = new RedirectToActionResult("Login", "Users", null);
             }
             else if (!_roles.Contains(userRole))
             {
-                // Si está logueado pero no tiene el rol, muestra acceso denegado
+                // Logueado, pero sin permiso
                 context.Result = new ViewResult { ViewName = "NoAccess" };
-                // Alternativamente: context.Result = new ForbidResult();
             }
             base.OnActionExecuting(context);
         }

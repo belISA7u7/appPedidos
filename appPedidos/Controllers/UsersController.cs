@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using appPedidos.Data;
 using appPedidos.Models;
@@ -12,10 +11,6 @@ using appPedidos.Filters;
 
 namespace appPedidos.Controllers
 {
-
-    [RequireLogin]
-    [RequireRole("admin")]
-    
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -25,14 +20,12 @@ namespace appPedidos.Controllers
             _context = context;
         }
 
-        // LOGIN Y LOGOUT
-        // GET: Users/Login
+        // LOGIN Y LOGOUT (acceso para todos)
         public IActionResult Login()
         {
             return View();
         }
 
-        // POST: Users/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string email, string password)
@@ -44,67 +37,55 @@ namespace appPedidos.Controllers
             {
                 HttpContext.Session.SetInt32("UserId", user.Id);
                 HttpContext.Session.SetString("UserRole", user.Rol);
-                
+                // Puedes guardar también el nombre si quieres mostrarlo en el layout
+                HttpContext.Session.SetString("UserName", user.Nombre ?? user.Email);
                 return RedirectToAction("Index", "Home");
             }
             ModelState.AddModelError("", "Usuario o contraseña incorrectos.");
             return View();
         }
 
-
-        // GET: Users/Logout
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Users");
         }
 
-
-        // ACCIONES CRUD GENERADAS POR SCAFFOLDING
-
-        // GET: Users
+        // SOLO ADMIN: CRUD de Usuarios
+        [RequireLogin]
+        [RequireRole("admin")]
         public async Task<IActionResult> Index()
         {
-            // Autorizacion solo admins pueden ver la lista de usuarios
-            if (!IsAdmin()) return RedirectToAction("Login", "Users");
-
             return View(await _context.Users.ToListAsync());
         }
 
-        // GET: Users/Details/5
+        [RequireLogin]
+        [RequireRole("admin")]
         public async Task<IActionResult> Details(int? id)
         {
-            
-
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var user = await _context.Users
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var user = await _context.Users.FirstOrDefaultAsync(m => m.Id == id);
             if (user == null)
-            {
                 return NotFound();
-            }
 
             return View(user);
         }
 
-        // GET: Users/Create
+        [RequireLogin]
+        [RequireRole("admin")]
         public IActionResult Create()
         {
-            
             return View();
         }
 
-        // POST: Users/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequireLogin]
+        [RequireRole("admin")]
         public async Task<IActionResult> Create([Bind("Id,Nombre,Email,Password,Rol")] User user)
         {
-           
-
             if (ModelState.IsValid)
             {
                 _context.Add(user);
@@ -114,35 +95,27 @@ namespace appPedidos.Controllers
             return View(user);
         }
 
-        // GET: Users/Edit/5
+        [RequireLogin]
+        [RequireRole("admin")]
         public async Task<IActionResult> Edit(int? id)
         {
-            
-
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var user = await _context.Users.FindAsync(id);
             if (user == null)
-            {
                 return NotFound();
-            }
             return View(user);
         }
 
-        // POST: Users/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequireLogin]
+        [RequireRole("admin")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Email,Password,Rol")] User user)
         {
-           
-
             if (id != user.Id)
-            {
                 return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
@@ -154,51 +127,38 @@ namespace appPedidos.Controllers
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!UserExists(user.Id))
-                    {
                         return NotFound();
-                    }
                     else
-                    {
                         throw;
-                    }
                 }
                 return RedirectToAction(nameof(Index));
             }
             return View(user);
         }
 
-        // GET: Users/Delete/5
+        [RequireLogin]
+        [RequireRole("admin")]
         public async Task<IActionResult> Delete(int? id)
         {
-            
-
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var user = await _context.Users
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var user = await _context.Users.FirstOrDefaultAsync(m => m.Id == id);
             if (user == null)
-            {
                 return NotFound();
-            }
 
             return View(user);
         }
 
-        // POST: Users/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [RequireLogin]
+        [RequireRole("admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            
-
             var user = await _context.Users.FindAsync(id);
             if (user != null)
-            {
                 _context.Users.Remove(user);
-            }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -208,19 +168,5 @@ namespace appPedidos.Controllers
         {
             return _context.Users.Any(e => e.Id == id);
         }
-
-        // METODOS DE AYUDA PARA CONTROL DE SESION Y ROLES
-
-        private bool IsAdmin()
-        {
-            return HttpContext.Session.GetString("UserRole") == "admin";
-        }
-
-        private bool IsLoggedIn()
-        {
-            return HttpContext.Session.GetInt32("UserId") != null;
-        }
-
-
     }
 }

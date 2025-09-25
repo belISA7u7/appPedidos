@@ -1,39 +1,55 @@
 ﻿@model IEnumerable<appPedidos.Models.OrderItem>
-
 @{
-    ViewData["Title"] = "Items de Pedido";
+    ViewData["Title"] = "Productos del Pedido";
 }
 
-<h2>Items de Pedido</h2>
+<h2 class="mb-4 text-center" style="color:#b76fdc;"><i class="bi bi-basket2-heart"></i> Productos en el Pedido</h2>
 
-<p>
-    <a asp-action="Create">Agregar nuevo item</a>
-</p>
+@if (TempData["Success"] != null)
+{
+        <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+        <div class="alert alert-danger">@TempData["Error"]</div>
+}
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Pedido</th>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Subtotal</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-        <tr>
-            <td>@item.OrderId</td>
-            <td>@item.Producto?.Nombre</td>
-            <td>@item.Cantidad</td>
-            <td>@item.Subtotal.ToString("C")</td>
-            <td>
-                <a asp-action="Details" asp-route-id="@item.Id">Detalles</a> |
-                <a asp-action="Edit" asp-route-id="@item.Id">Editar</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Eliminar</a>
-            </td>
-        </tr>
-        }
-    </tbody>
-</table>
+<div class="mb-3 text-end">
+    @if (ViewBag.OrderId != null)
+    {
+            <a asp-action="Create" asp-route-orderId="@ViewBag.OrderId" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Agregar Producto
+            </a>
+    }
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Producto?.Nombre</td>
+                        <td>@item.Cantidad</td>
+                        <td>$@item.Subtotal.ToString("0.00")</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm"><i class="bi bi-eye"></i></a>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil"></i></a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<a asp-controller="Orders" asp-action="Index" class="btn btn-link mt-3"><i class="bi bi-arrow-left"></i> Volver a pedidos</a>

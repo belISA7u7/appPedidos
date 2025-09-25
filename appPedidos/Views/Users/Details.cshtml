@@ -1,51 +1,19 @@
 ﻿@model appPedidos.Models.User
-
 @{
-    Layout = null;
+    ViewData["Title"] = "Detalles Usuario";
 }
+<h2 class="mb-4 text-center" style="color:#c16ba5;"><i class="bi bi-eye"></i> Detalles del Usuario</h2>
 
-<!DOCTYPE html>
-
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Details</title>
-</head>
-<body>
-
-<div>
-    <h4>User</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nombre)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nombre)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Email)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Email)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Password)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Password)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Rol)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Rol)
-        </dd>
-    </dl>
+<div class="card mx-auto" style="max-width: 430px;">
+    <div class="card-body">
+        <h5 class="card-title" style="color:#c16ba5;">@Model.Nombre</h5>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Email:</b> @Model.Email</li>
+            <li class="list-group-item"><b>Rol:</b> <span class="badge bg-secondary">@Model.Rol</span></li>
+        </ul>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="mt-3 text-center">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil"></i> Editar</a>
+    <a asp-action="Index" class="btn btn-link"><i class="bi bi-arrow-left"></i> Volver a la lista</a>
 </div>
-</body>
-</html>

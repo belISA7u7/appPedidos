@@ -1,39 +1,20 @@
 ﻿@model appPedidos.Models.OrderItem
 @{
-    ViewData["Title"] = "Eliminar producto del pedido";
+    ViewData["Title"] = "Eliminar Producto del Pedido";
 }
-
-<h2 class="mb-4">Eliminar producto del pedido</h2>
-
-<div class="alert alert-warning">
-    <strong>¿Estás seguro que deseas eliminar este producto del pedido?</strong>
+<h2 class="mb-4 text-center" style="color:#b10e47;"><i class="bi bi-trash"></i> Eliminar Producto del Pedido</h2>
+<div class="alert alert-danger text-center">
+    <strong>¿Estás segura que quieres eliminar este producto del pedido?</strong>
 </div>
-
-<div class="card mb-3">
+<div class="card mx-auto" style="max-width: 430px;">
     <div class="card-body">
-        <dl class="row">
-            <dt class="col-sm-4">Producto</dt>
-            <dd class="col-sm-8">@Model.Producto?.Nombre</dd>
-            <dt class="col-sm-4">Cantidad</dt>
-            <dd class="col-sm-8">@Model.Cantidad</dd>
-            <dt class="col-sm-4">Subtotal</dt>
-            <dd class="col-sm-8">$@Model.Subtotal.ToString("0.00")</dd>
-        </dl>
+        <div class="mb-2"><b>Producto:</b> @Model.Producto?.Nombre</div>
+        <div class="mb-2"><b>Cantidad:</b> @Model.Cantidad</div>
+        <div class="mb-2"><b>Subtotal:</b> $@Model.Subtotal.ToString("0.00")</div>
     </div>
 </div>
-
-<form asp-action="DeleteConfirmed" method="post">
+<form asp-action="Delete" method="post">
     <input type="hidden" asp-for="Id" />
-    <button type="submit" class="btn btn-danger">
-        <i class="bi bi-trash"></i> Eliminar
-    </button>
-    <a asp-controller="Orders" asp-action="Edit" asp-route-id="@Model.OrderId" class="btn btn-secondary ms-2">
-        <i class="bi bi-arrow-left"></i> Cancelar
-    </a>
+    <button type="submit" class="btn btn-danger mt-3 w-100"><i class="bi bi-trash"></i> Eliminar</button>
+    <a asp-controller="Orders" asp-action="Edit" asp-route-id="@Model.OrderId" class="btn btn-link mt-3"><i class="bi bi-arrow-left"></i> Cancelar</a>
 </form>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}

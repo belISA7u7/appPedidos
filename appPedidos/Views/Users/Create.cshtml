@@ -1,54 +1,40 @@
 ﻿@model appPedidos.Models.User
-
 @{
-    Layout = null;
+    ViewData["Title"] = "Nuevo Usuario";
 }
 
-<!DOCTYPE html>
+<h2 class="mb-4 text-center" style="color:#c16ba5;"><i class="bi bi-person-plus"></i> Nuevo Usuario</h2>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Create</title>
-</head>
-<body>
-
-<h4>User</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
+<div class="card mx-auto" style="max-width: 430px;">
+    <div class="card-body">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Nombre" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="Nombre" class="form-label"></label>
                 <input asp-for="Nombre" class="form-control" />
                 <span asp-validation-for="Nombre" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
                 <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Password" class="control-label"></label>
-                <input asp-for="Password" class="form-control" />
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" type="password" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Rol" class="control-label"></label>
-                <input asp-for="Rol" class="form-control" />
+            <div class="mb-3">
+                <label asp-for="Rol" class="form-label"></label>
+                <select asp-for="Rol" class="form-select">
+                    <option value="admin">Administrador</option>
+                    <option value="empleado">Empleado</option>
+                    <option value="cliente">Cliente</option>
+                </select>
                 <span asp-validation-for="Rol" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
+            <button type="submit" class="btn btn-success w-100"><i class="bi bi-person-plus"></i> Crear Usuario</button>
         </form>
     </div>
 </div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-</body>
-</html>
+<a asp-action="Index" class="btn btn-link mt-3"><i class="bi bi-arrow-left"></i> Volver a la lista</a>

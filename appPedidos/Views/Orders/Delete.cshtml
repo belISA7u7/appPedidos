@@ -3,13 +3,13 @@
     ViewData["Title"] = "Eliminar Pedido";
 }
 
-<h2 class="mb-4">Eliminar Pedido</h2>
+<h2 class="mb-4 text-center" style="color:#b10e47;"><i class="bi bi-trash"></i> Eliminar Pedido</h2>
 
-<div class="alert alert-warning">
-    <strong>¿Estás seguro que quieres eliminar este pedido?</strong>
+<div class="alert alert-danger text-center">
+    <strong>¿Estás segura que quieres eliminar este pedido?</strong>
 </div>
 
-<div class="card mb-3">
+<div class="card mb-3 mx-auto" style="max-width: 520px;">
     <div class="card-body">
         <dl class="row">
             <dt class="col-sm-4">Cliente</dt>
@@ -22,6 +22,6 @@
 
 <form asp-action="DeleteConfirmed" method="post">
     <input type="hidden" asp-for="Id" />
-    <button type="submit" class="btn btn-danger">Eliminar</button>
-    <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+    <button type="submit" class="btn btn-danger w-100"><i class="bi bi-trash"></i> Eliminar</button>
+    <a asp-action="Index" class="btn btn-link mt-3"><i class="bi bi-arrow-left"></i> Cancelar</a>
 </form>

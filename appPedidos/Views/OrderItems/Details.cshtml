@@ -1,29 +1,15 @@
 ﻿@model appPedidos.Models.OrderItem
-
 @{
-    ViewData["Title"] = "Detalles del Item";
+    ViewData["Title"] = "Detalle Producto en Pedido";
 }
 
-<h2>Detalles del Item de Pedido</h2>
+<h2 class="mb-4 text-center" style="color:#c16ba5;"><i class="bi bi-eye"></i> Detalle del Producto en el Pedido</h2>
 
-<div>
-    <h4>Item</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">Pedido</dt>
-        <dd class="col-sm-10">@Model.OrderId</dd>
-
-        <dt class="col-sm-2">Producto</dt>
-        <dd class="col-sm-10">@Model.Producto?.Nombre</dd>
-
-        <dt class="col-sm-2">Cantidad</dt>
-        <dd class="col-sm-10">@Model.Cantidad</dd>
-
-        <dt class="col-sm-2">Subtotal</dt>
-        <dd class="col-sm-10">@Model.Subtotal.ToString("C")</dd>
-    </dl>
+<div class="card mx-auto" style="max-width: 430px;">
+    <div class="card-body">
+        <div class="mb-2"><b>Producto:</b> @Model.Producto?.Nombre</div>
+        <div class="mb-2"><b>Cantidad:</b> @Model.Cantidad</div>
+        <div class="mb-2"><b>Subtotal:</b> $@Model.Subtotal.ToString("0.00")</div>
+    </div>
 </div>
-<p>
-    <a asp-action="Edit" asp-route-id="@Model.Id">Editar</a> |
-    <a asp-action="Index">Volver al listado</a>
-</p>
+<a asp-controller="Orders" asp-action="Edit" asp-route-id="@Model.OrderId" class="btn btn-link mt-3"><i class="bi bi-arrow-left"></i> Volver al pedido</a>

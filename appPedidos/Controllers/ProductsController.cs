@@ -23,7 +23,7 @@ namespace appPedidos.Controllers
             _context = context;
         }
 
-       
+
 
         // GET: Products
         public async Task<IActionResult> Index(string searchString, decimal? minPrice, decimal? maxPrice)

@@ -1,51 +1,58 @@
 ﻿@model appPedidos.Models.Order
-
 @{
-    Layout = null;
+    ViewData["Title"] = "Detalle del Pedido";
+    var orderItems = ViewBag.OrderItems as List<appPedidos.Models.OrderItem>;
 }
 
-<!DOCTYPE html>
+<h2 class="mb-4">Detalle del Pedido</h2>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Details</title>
-</head>
-<body>
+<div class="card mb-4">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Cliente</dt>
+            <dd class="col-sm-9">@Model.Cliente?.Email</dd>
+            <dt class="col-sm-3">Fecha</dt>
+            <dd class="col-sm-9">@Model.Fecha.ToString("g")</dd>
+            <dt class="col-sm-3">Estado</dt>
+            <dd class="col-sm-9">@Model.Estado</dd>
+            <dt class="col-sm-3">Total</dt>
+            <dd class="col-sm-9">$@Model.Total.ToString("0.00")</dd>
+        </dl>
+    </div>
+</div>
 
-<div>
-    <h4>Order</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Cliente)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Cliente.Email)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Fecha)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Fecha)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Estado)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Estado)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Total)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Total)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
-</body>
-</html>
+<h4>Productos en el Pedido</h4>
+@if (orderItems != null && orderItems.Count > 0)
+{
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in orderItems)
+            {
+                    <tr>
+                        <td>@item.Producto?.Nombre</td>
+                        <td>@item.Cantidad</td>
+                        <td>$@item.Producto?.Precio.ToString("0.00")</td>
+                        <td>$@item.Subtotal.ToString("0.00")</td>
+                    </tr>
+            }
+            </tbody>
+        </table>
+}
+else
+{
+        <div class="alert alert-warning">
+            No hay productos agregados a este pedido.
+        </div>
+}
+
+<a asp-action="Index" class="btn btn-secondary mt-3">
+    <i class="bi bi-arrow-left"></i> Volver a la lista
+</a>

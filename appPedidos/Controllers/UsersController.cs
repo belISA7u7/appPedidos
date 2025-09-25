@@ -8,9 +8,14 @@ using Microsoft.EntityFrameworkCore;
 using appPedidos.Data;
 using appPedidos.Models;
 using Microsoft.AspNetCore.Http;
+using appPedidos.Filters;
 
 namespace appPedidos.Controllers
 {
+
+    [RequireLogin]
+    [RequireRole("admin")]
+    
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -30,19 +35,22 @@ namespace appPedidos.Controllers
         // POST: Users/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Login(string email, string password)
+        public async Task<IActionResult> Login(string email, string password)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Email == email && u.Password == password);
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email && u.Password == password);
+
             if (user != null)
             {
                 HttpContext.Session.SetInt32("UserId", user.Id);
-                HttpContext.Session.SetString("UserName", user.Nombre);
                 HttpContext.Session.SetString("UserRole", user.Rol);
+                
                 return RedirectToAction("Index", "Home");
             }
-            ViewBag.Error = "Usuario o contraseña incorrectos";
+            ModelState.AddModelError("", "Usuario o contraseña incorrectos.");
             return View();
         }
+
 
         // GET: Users/Logout
         public IActionResult Logout()
@@ -50,6 +58,7 @@ namespace appPedidos.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Users");
         }
+
 
         // ACCIONES CRUD GENERADAS POR SCAFFOLDING
 
@@ -65,7 +74,7 @@ namespace appPedidos.Controllers
         // GET: Users/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Users");
+            
 
             if (id == null)
             {
@@ -85,7 +94,7 @@ namespace appPedidos.Controllers
         // GET: Users/Create
         public IActionResult Create()
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Users");
+            
             return View();
         }
 
@@ -94,7 +103,7 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Nombre,Email,Password,Rol")] User user)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Users");
+           
 
             if (ModelState.IsValid)
             {
@@ -108,7 +117,7 @@ namespace appPedidos.Controllers
         // GET: Users/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Users");
+            
 
             if (id == null)
             {
@@ -128,7 +137,7 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Email,Password,Rol")] User user)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Users");
+           
 
             if (id != user.Id)
             {
@@ -161,7 +170,7 @@ namespace appPedidos.Controllers
         // GET: Users/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Users");
+            
 
             if (id == null)
             {
@@ -183,7 +192,7 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Users");
+            
 
             var user = await _context.Users.FindAsync(id);
             if (user != null)
@@ -211,5 +220,7 @@ namespace appPedidos.Controllers
         {
             return HttpContext.Session.GetInt32("UserId") != null;
         }
+
+
     }
 }

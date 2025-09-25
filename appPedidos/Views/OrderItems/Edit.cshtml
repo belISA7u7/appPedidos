@@ -1,55 +1,38 @@
 ﻿@model appPedidos.Models.OrderItem
-
 @{
-    Layout = null;
+    ViewData["Title"] = "Editar producto del pedido";
 }
 
-<!DOCTYPE html>
+<h2 class="mb-4">Editar producto del pedido</h2>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Edit</title>
-</head>
-<body>
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="OrderId" />
+    <input type="hidden" asp-for="ProductoId" />
 
-<h4>OrderItem</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="OrderId" class="control-label"></label>
-                <select asp-for="OrderId" class="form-control" asp-items="ViewBag.OrderId"></select>
-                <span asp-validation-for="OrderId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ProductoId" class="control-label"></label>
-                <select asp-for="ProductoId" class="form-control" asp-items="ViewBag.ProductoId"></select>
-                <span asp-validation-for="ProductoId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Cantidad" class="control-label"></label>
-                <input asp-for="Cantidad" class="form-control" />
-                <span asp-validation-for="Cantidad" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Subtotal" class="control-label"></label>
-                <input asp-for="Subtotal" class="form-control" />
-                <span asp-validation-for="Subtotal" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+    <div class="mb-3">
+        <label class="form-label">Producto</label>
+        <input class="form-control" value="@Model.Producto?.Nombre" readonly />
     </div>
-</div>
+    <div class="mb-3">
+        <label asp-for="Cantidad" class="form-label"></label>
+        <input asp-for="Cantidad" class="form-control" min="1" required />
+        <span asp-validation-for="Cantidad" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Subtotal</label>
+        <input class="form-control" value="@Model.Subtotal.ToString("0.00")" readonly />
+    </div>
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save"></i> Guardar cambios
+    </button>
+    <a asp-controller="Orders" asp-action="Edit" asp-route-id="@Model.OrderId" class="btn btn-secondary ms-2">
+        <i class="bi bi-arrow-left"></i> Cancelar
+    </a>
+</form>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-</body>
-</html>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

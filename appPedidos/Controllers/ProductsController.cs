@@ -6,11 +6,16 @@ using Microsoft.EntityFrameworkCore;
 using appPedidos.Data;
 using appPedidos.Models;
 using Microsoft.AspNetCore.Http;
+using appPedidos.Filters;
+
 
 namespace appPedidos.Controllers
 {
+    [RequireLogin]
+    [RequireRole("admin", "empleado")] 
     public class ProductsController : Controller
     {
+
         private readonly ApplicationDbContext _context;
 
         public ProductsController(ApplicationDbContext context)
@@ -18,12 +23,7 @@ namespace appPedidos.Controllers
             _context = context;
         }
 
-        // Método auxiliar para restringir acceso a admin o empleado
-        private bool IsAdminOrEmpleado()
-        {
-            var role = HttpContext.Session.GetString("UserRole");
-            return role == "admin" || role == "empleado";
-        }
+       
 
         // GET: Products
         public async Task<IActionResult> Index(string searchString, decimal? minPrice, decimal? maxPrice)
@@ -70,8 +70,7 @@ namespace appPedidos.Controllers
         // GET: Products/Create
         public IActionResult Create()
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
+            
             return View();
         }
 
@@ -80,8 +79,7 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Nombre,Descripcion,Precio,Stock")] Product product)
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
+            
 
             if (ModelState.IsValid)
             {
@@ -104,8 +102,7 @@ namespace appPedidos.Controllers
         // GET: Products/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
+            
 
             if (id == null)
             {
@@ -125,8 +122,7 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,Precio,Stock")] Product product)
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
+           
 
             if (id != product.Id)
             {
@@ -164,8 +160,7 @@ namespace appPedidos.Controllers
         // GET: Products/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
+           
 
             if (id == null)
             {
@@ -187,8 +182,7 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
+           
 
             try
             {

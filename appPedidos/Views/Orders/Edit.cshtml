@@ -1,55 +1,111 @@
 ﻿@model appPedidos.Models.Order
-
 @{
-    Layout = null;
+    ViewData["Title"] = "Editar Pedido";
+    var orderItems = ViewBag.OrderItems as List<appPedidos.Models.OrderItem>;
+    var userRole = Context.Session.GetString("UserRole");
 }
 
-<!DOCTYPE html>
+<h2 class="mb-4">Editar Pedido</h2>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Edit</title>
-</head>
-<body>
+@if (TempData["Success"] != null)
+{
+        <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+        <div class="alert alert-danger">@TempData["Error"]</div>
+}
 
-<h4>Order</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="card mb-4">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
             <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="ClienteId" class="control-label"></label>
-                <select asp-for="ClienteId" class="form-control" asp-items="ViewBag.ClienteId"></select>
-                <span asp-validation-for="ClienteId" class="text-danger"></span>
+            <input type="hidden" asp-for="ClienteId" />
+            <input type="hidden" asp-for="Fecha" />
+            <div class="mb-3">
+                <label class="form-label">Cliente</label>
+                <input class="form-control" value="@Model.Cliente?.Email" readonly />
             </div>
-            <div class="form-group">
-                <label asp-for="Fecha" class="control-label"></label>
-                <input asp-for="Fecha" class="form-control" />
-                <span asp-validation-for="Fecha" class="text-danger"></span>
+            <div class="mb-3">
+                <label class="form-label">Fecha</label>
+                <input class="form-control" value="@Model.Fecha.ToString("g")" readonly />
             </div>
-            <div class="form-group">
-                <label asp-for="Estado" class="control-label"></label>
-                <input asp-for="Estado" class="form-control" />
+            <div class="mb-3">
+                <label asp-for="Estado" class="form-label"></label>
+                @if (userRole == "admin" || userRole == "empleado")
+                {
+                        <select asp-for="Estado" class="form-select">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Procesado">Procesado</option>
+                            <option value="Enviado">Enviado</option>
+                            <option value="Entregado">Entregado</option>
+                        </select>
+                }
+                else
+                {
+                        <input class="form-control" asp-for="Estado" readonly />
+                }
                 <span asp-validation-for="Estado" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Total" class="control-label"></label>
-                <input asp-for="Total" class="form-control" />
-                <span asp-validation-for="Total" class="text-danger"></span>
+            <div class="mb-3">
+                <label asp-for="Total" class="form-label"></label>
+                <input class="form-control" asp-for="Total" readonly />
             </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+<h4>Productos en el Pedido</h4>
+@if (orderItems != null && orderItems.Count > 0)
+{
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Subtotal</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in orderItems)
+            {
+                    <tr>
+                        <td>@item.Producto?.Nombre</td>
+                        <td>@item.Cantidad</td>
+                        <td>$@item.Producto?.Precio.ToString("0.00")</td>
+                        <td>$@item.Subtotal.ToString("0.00")</td>
+                        <td>
+                            <a asp-controller="OrderItems" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm me-1">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+                            <form asp-controller="OrderItems" asp-action="Delete" asp-route-id="@item.Id" method="get" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+            }
+            </tbody>
+        </table>
+}
+else
+{
+        <div class="alert alert-warning">
+            No hay productos agregados a este pedido.
+        </div>
+}
 
-</body>
-</html>
+<hr />
+<h4>Agregar producto al pedido</h4>
+<partial name="_AddOrderItemPartial" model="new appPedidos.Models.OrderItem { OrderId = Model.Id }" />
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,19 +1,35 @@
 ﻿@{
     ViewData["Title"] = "Iniciar sesión";
 }
+
 <h2>Iniciar sesión</h2>
+
 @if (ViewBag.Error != null)
 {
-    <div class="alert alert-danger">@ViewBag.Error</div>
+        <div class="alert alert-danger">@ViewBag.Error</div>
 }
-<form method="post" asp-action="Login">
+
+@if (ViewData.ModelState != null && !ViewData.ModelState.IsValid)
+{
+    foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+    {
+                <div class="alert alert-danger">@error.ErrorMessage</div>
+    }
+}
+
+@if (TempData["Message"] != null)
+{
+        <div class="alert alert-warning">@TempData["Message"]</div>
+}
+
+<form asp-action="Login" method="post" autocomplete="off">
     <div class="form-group">
-        <label>Email</label>
-        <input name="email" class="form-control" required />
+        <label asp-for="email">Email</label>
+        <input asp-for="email" name="email" class="form-control" required />
     </div>
     <div class="form-group">
-        <label>Contraseña</label>
-        <input name="password" type="password" class="form-control" required />
+        <label asp-for="password">Contraseña</label>
+        <input asp-for="password" name="password" type="password" class="form-control" required />
     </div>
     <button type="submit" class="btn btn-primary">Entrar</button>
 </form>

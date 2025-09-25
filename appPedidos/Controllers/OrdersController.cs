@@ -7,9 +7,12 @@ using Microsoft.EntityFrameworkCore;
 using appPedidos.Data;
 using appPedidos.Models;
 using Microsoft.AspNetCore.Http;
+using appPedidos.Filters;
+
 
 namespace appPedidos.Controllers
 {
+    [RequireLogin]
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,69 +22,82 @@ namespace appPedidos.Controllers
             _context = context;
         }
 
-        // Método auxiliar para restringir acceso a admin o empleado
-        private bool IsAdminOrEmpleado()
-        {
-            var role = HttpContext.Session.GetString("UserRole");
-            return role == "admin" || role == "empleado";
-        }
+        
 
         // GET: Orders
         public async Task<IActionResult> Index()
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
+            
 
-            var applicationDbContext = _context.Orders.Include(o => o.Cliente);
-            return View(await applicationDbContext.ToListAsync());
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            IQueryable<Order> orders = _context.Orders.Include(o => o.Cliente);
+
+            if (userRole == "cliente" && userId.HasValue)
+                orders = orders.Where(o => o.ClienteId == userId.Value);
+
+            return View(await orders.ToListAsync());
         }
 
         // GET: Orders/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
-
+            
             if (id == null)
                 return NotFound();
 
             var order = await _context.Orders
                 .Include(o => o.Cliente)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
                 return NotFound();
 
-            // Obtener los OrderItems relacionados
             var orderItems = await _context.OrderItems
                 .Include(oi => oi.Producto)
                 .Where(oi => oi.OrderId == order.Id)
                 .ToListAsync();
 
             ViewBag.OrderItems = orderItems;
-
             return View(order);
         }
 
         // GET: Orders/Create
         public IActionResult Create()
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
+            
 
-            ViewData["ClienteId"] = new SelectList(_context.Users, "Id", "Email");
-            return View();
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole == "cliente")
+            {
+                // No mostrar select, cliente es el logueado
+                return View();
+            }
+            else
+            {
+                ViewData["ClienteId"] = new SelectList(_context.Users.Where(u => u.Rol == "cliente"), "Id", "Email");
+                return View();
+            }
         }
 
         // POST: Orders/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ClienteId")] Order order)
+        public async Task<IActionResult> Create(Order order)
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
+            
 
-            // Asignar fecha y estado por defecto
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userRole == "cliente" && userId.HasValue)
+            {
+                order.ClienteId = userId.Value;
+                // Quitar error de validación si existe
+                ModelState.Remove("ClienteId");
+            }
+
             order.Fecha = DateTime.Now;
             order.Estado = "Pendiente";
             order.Total = 0;
@@ -93,7 +109,6 @@ namespace appPedidos.Controllers
                     _context.Add(order);
                     await _context.SaveChangesAsync();
                     TempData["Success"] = "Pedido creado correctamente.";
-                    // Redirigir a la edición para que agreguen items al pedido
                     return RedirectToAction("Edit", new { id = order.Id });
                 }
                 catch (Exception ex)
@@ -101,16 +116,17 @@ namespace appPedidos.Controllers
                     ModelState.AddModelError("", "Error al crear el pedido: " + ex.Message);
                 }
             }
-            ViewData["ClienteId"] = new SelectList(_context.Users, "Id", "Email", order.ClienteId);
+
+            if (userRole != "cliente")
+                ViewData["ClienteId"] = new SelectList(_context.Users.Where(u => u.Rol == "cliente"), "Id", "Email", order.ClienteId);
+
             return View(order);
         }
 
         // GET: Orders/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
-
+            
             if (id == null)
                 return NotFound();
 
@@ -121,7 +137,6 @@ namespace appPedidos.Controllers
             if (order == null)
                 return NotFound();
 
-            // Obtener los OrderItems relacionados
             var orderItems = await _context.OrderItems
                 .Include(oi => oi.Producto)
                 .Where(oi => oi.OrderId == order.Id)
@@ -129,7 +144,10 @@ namespace appPedidos.Controllers
 
             ViewBag.OrderItems = orderItems;
 
-            ViewData["ClienteId"] = new SelectList(_context.Users, "Id", "Email", order.ClienteId);
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "cliente")
+                ViewData["ClienteId"] = new SelectList(_context.Users.Where(u => u.Rol == "cliente"), "Id", "Email", order.ClienteId);
+
             return View(order);
         }
 
@@ -138,24 +156,43 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,ClienteId,Fecha,Estado")] Order order)
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
-
+            
             if (id != order.Id)
                 return NotFound();
+
+            // Solo admin/empleado pueden cambiar estado y cliente
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var dbOrder = await _context.Orders
+                .Include(o => o.Cliente)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (dbOrder == null)
+                return NotFound();
+
+            if (userRole == "cliente")
+            {
+                // El cliente NO puede cambiar estado ni cliente ni fecha
+                // Solo puede guardar y continuar con los productos
+            }
+            else
+            {
+                dbOrder.Estado = order.Estado; // Solo admin/empleado pueden cambiar estado
+                dbOrder.ClienteId = order.ClienteId;
+            }
+
+            // Fecha nunca se edita aquí, solo al crear
+            // dbOrder.Fecha = order.Fecha; // No se debe actualizar
+
+            // Recalcular total sumando los subtotales de los OrderItems
+            dbOrder.Total = await _context.OrderItems
+                .Where(oi => oi.OrderId == id)
+                .SumAsync(oi => oi.Subtotal);
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Recalcular total automáticamente sumando los subtotales de los OrderItems
-                    var orderItems = await _context.OrderItems
-                        .Where(oi => oi.OrderId == id)
-                        .ToListAsync();
-
-                    order.Total = orderItems.Sum(oi => oi.Subtotal);
-
-                    _context.Update(order);
+                    _context.Update(dbOrder);
                     await _context.SaveChangesAsync();
                     TempData["Success"] = "Pedido actualizado correctamente.";
                     return RedirectToAction(nameof(Index));
@@ -172,27 +209,33 @@ namespace appPedidos.Controllers
                     ModelState.AddModelError("", "Error al actualizar el pedido: " + ex.Message);
                 }
             }
-            ViewData["ClienteId"] = new SelectList(_context.Users, "Id", "Email", order.ClienteId);
-            return View(order);
+
+            if (userRole != "cliente")
+                ViewData["ClienteId"] = new SelectList(_context.Users.Where(u => u.Rol == "cliente"), "Id", "Email", order.ClienteId);
+
+            // Recargar items para la vista
+            ViewBag.OrderItems = await _context.OrderItems
+                .Include(oi => oi.Producto)
+                .Where(oi => oi.OrderId == id)
+                .ToListAsync();
+
+            return View(dbOrder);
         }
 
         // GET: Orders/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
-
+            
             if (id == null)
                 return NotFound();
 
             var order = await _context.Orders
                 .Include(o => o.Cliente)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
                 return NotFound();
 
-            // Obtener los OrderItems relacionados
             var orderItems = await _context.OrderItems
                 .Include(oi => oi.Producto)
                 .Where(oi => oi.OrderId == order.Id)
@@ -208,15 +251,13 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (!IsAdminOrEmpleado())
-                return RedirectToAction("Login", "Users");
+            
 
             try
             {
                 var order = await _context.Orders.FindAsync(id);
                 if (order != null)
                 {
-                    // Elimina primero los OrderItems asociados
                     var orderItems = await _context.OrderItems.Where(oi => oi.OrderId == id).ToListAsync();
                     if (orderItems.Any())
                         _context.OrderItems.RemoveRange(orderItems);

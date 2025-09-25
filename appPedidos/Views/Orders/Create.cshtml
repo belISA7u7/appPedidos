@@ -1,53 +1,36 @@
 ﻿@model appPedidos.Models.Order
-
 @{
-    Layout = null;
+    ViewData["Title"] = "Nuevo Pedido";
+    var userRole = Context.Session.GetString("UserRole");
 }
 
-<!DOCTYPE html>
+<h2 class="mb-4">Nuevo Pedido</h2>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Create</title>
-</head>
-<body>
+@if (TempData["Error"] != null)
+{
+        <div class="alert alert-danger">@TempData["Error"]</div>
+}
 
-<h4>Order</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="ClienteId" class="control-label"></label>
-                <select asp-for="ClienteId" class ="form-control" asp-items="ViewBag.ClienteId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="Fecha" class="control-label"></label>
-                <input asp-for="Fecha" class="form-control" />
-                <span asp-validation-for="Fecha" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Estado" class="control-label"></label>
-                <input asp-for="Estado" class="form-control" />
-                <span asp-validation-for="Estado" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Total" class="control-label"></label>
-                <input asp-for="Total" class="form-control" />
-                <span asp-validation-for="Total" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
+<div class="card">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @if (userRole != "cliente")
+            {
+                    <div class="mb-3">
+                        <label asp-for="ClienteId" class="form-label"></label>
+                        <select asp-for="ClienteId" class="form-select" asp-items="ViewBag.ClienteId"></select>
+                        <span asp-validation-for="ClienteId" class="text-danger"></span>
+                    </div>
+            }
+            <!-- Fecha y estado se asignan en el controlador -->
+            <button type="submit" class="btn btn-success">Crear Pedido</button>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-</body>
-</html>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

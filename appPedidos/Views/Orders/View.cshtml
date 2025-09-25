@@ -1,0 +1,32 @@
+﻿@model appPedidos.Models.OrderItem
+@inject appPedidos.Data.ApplicationDbContext db
+
+@{
+    // Solo mostrar productos con stock disponible
+    var productos = db.Products.Where(p => p.Stock > 0).ToList();
+}
+
+<form asp-controller="OrderItems" asp-action="Create" method="post" class="row g-3">
+    <input type="hidden" asp-for="OrderId" />
+    <div class="col-md-6">
+        <label asp-for="ProductoId" class="form-label"></label>
+        <select asp-for="ProductoId" class="form-select" required>
+            <option value="">Seleccione un producto</option>
+            @foreach (var p in productos)
+            {
+                    <option value="@p.Id">@p.Nombre (@p.Stock disponibles)</option>
+            }
+        </select>
+        <span asp-validation-for="ProductoId" class="text-danger"></span>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="Cantidad" class="form-label"></label>
+        <input asp-for="Cantidad" class="form-control" min="1" required />
+        <span asp-validation-for="Cantidad" class="text-danger"></span>
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-success w-100">
+            <i class="bi bi-plus-circle"></i> Agregar
+        </button>
+    </div>
+</form>

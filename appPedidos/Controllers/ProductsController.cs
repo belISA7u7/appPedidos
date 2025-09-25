@@ -182,28 +182,21 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-           
-
-            try
+            var product = await _context.Products.FindAsync(id);
+            if (product != null)
             {
-                var product = await _context.Products.FindAsync(id);
-                if (product != null)
-                {
-                    _context.Products.Remove(product);
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = "Producto eliminado correctamente.";
-                }
-                else
-                {
-                    TempData["Error"] = "Producto no encontrado.";
-                }
+                _context.Products.Remove(product);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Producto eliminado correctamente.";
             }
-            catch (Exception ex)
+            else
             {
-                TempData["Error"] = "Error al eliminar el producto: " + ex.Message;
+                TempData["Error"] = "Producto no encontrado.";
             }
             return RedirectToAction(nameof(Index));
         }
+
+
 
         private bool ProductExists(int id)
         {

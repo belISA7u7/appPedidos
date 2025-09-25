@@ -168,8 +168,6 @@ namespace appPedidos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-           
-
             var orderItem = await _context.OrderItems
                 .Include(oi => oi.Producto)
                 .FirstOrDefaultAsync(oi => oi.Id == id);
@@ -198,6 +196,7 @@ namespace appPedidos.Controllers
             }
             return RedirectToAction("Edit", "Orders", new { id = orderId });
         }
+
 
         // Ayuda: recalcula el total del pedido después de cambios
         private async Task RecalcularTotal(int orderId)

@@ -26,10 +26,27 @@ namespace appPedidos.Controllers
         }
 
         // GET: Products
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString, decimal? minPrice, decimal? maxPrice)
         {
-            // Todos pueden ver el listado; si quieres, puedes limitar aquí por rol.
-            return View(await _context.Products.ToListAsync());
+            var products = from p in _context.Products
+                           select p;
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                products = products.Where(p => p.Nombre.Contains(searchString));
+            }
+
+            if (minPrice.HasValue)
+            {
+                products = products.Where(p => p.Precio >= minPrice.Value);
+            }
+
+            if (maxPrice.HasValue)
+            {
+                products = products.Where(p => p.Precio <= maxPrice.Value);
+            }
+
+            return View(await products.ToListAsync());
         }
 
         // GET: Products/Details/5

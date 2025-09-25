@@ -19,7 +19,7 @@ namespace appPedidos.Models
         [Range(0, double.MaxValue, ErrorMessage = "El subtotal no puede ser negativo.")]
         public decimal Subtotal { get; set; }
 
-        // Propiedades de navegación (opcional)
+        // Propiedades de navegación 
         public Order Order { get; set; }
         public Product Producto { get; set; }
     }

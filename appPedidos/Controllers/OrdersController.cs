@@ -180,7 +180,7 @@ namespace appPedidos.Controllers
                 dbOrder.ClienteId = order.ClienteId;
             }
 
-            // Fecha nunca se edita aquí, solo al crear
+            // Fecha nunca se edita aqui, solo al crear
             // dbOrder.Fecha = order.Fecha; // No se debe actualizar
 
             // Recalcular total sumando los subtotales de los OrderItems

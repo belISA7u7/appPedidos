@@ -1,21 +1,19 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using appPedidos.Data;
 using appPedidos.Models;
 using Microsoft.AspNetCore.Http;
 using appPedidos.Filters;
-
+using Ganss.Xss;
 
 namespace appPedidos.Controllers
 {
     [RequireLogin]
-    [RequireRole("admin", "empleado")] 
     public class ProductsController : Controller
     {
-
         private readonly ApplicationDbContext _context;
 
         public ProductsController(ApplicationDbContext context)
@@ -23,63 +21,47 @@ namespace appPedidos.Controllers
             _context = context;
         }
 
-
-
-        // GET: Products
+        // Todos los usuarios logueados pueden ver productos
         public async Task<IActionResult> Index(string searchString, decimal? minPrice, decimal? maxPrice)
         {
-            var products = from p in _context.Products
-                           select p;
+            var products = from p in _context.Products select p;
 
             if (!string.IsNullOrEmpty(searchString))
-            {
                 products = products.Where(p => p.Nombre.Contains(searchString));
-            }
 
             if (minPrice.HasValue)
-            {
                 products = products.Where(p => p.Precio >= minPrice.Value);
-            }
 
             if (maxPrice.HasValue)
-            {
                 products = products.Where(p => p.Precio <= maxPrice.Value);
-            }
 
             return View(await products.ToListAsync());
         }
 
-        // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var product = await _context.Products
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (product == null)
-            {
-                return NotFound();
-            }
+            var product = await _context.Products.FirstOrDefaultAsync(m => m.Id == id);
+            if (product == null) return NotFound();
 
             return View(product);
         }
 
-        // GET: Products/Create
+        // Solo admin o empleado pueden crear productos
+        [RequireRole("admin", "empleado")]
         public IActionResult Create()
         {
-            
             return View();
         }
 
-        // POST: Products/Create
         [HttpPost]
+        [RequireRole("admin", "empleado")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Nombre,Descripcion,Precio,Stock")] Product product)
         {
-            
+            var sanitizer = new HtmlSanitizer();
+            product.Descripcion = sanitizer.Sanitize(product.Descripcion);
 
             if (ModelState.IsValid)
             {
@@ -92,42 +74,30 @@ namespace appPedidos.Controllers
                 }
                 catch (Exception ex)
                 {
-                    // Manejo de error y mensaje amigable
                     ModelState.AddModelError("", "Error al guardar el producto: " + ex.Message);
                 }
             }
             return View(product);
         }
 
-        // GET: Products/Edit/5
+        [RequireRole("admin", "empleado")]
         public async Task<IActionResult> Edit(int? id)
         {
-            
-
-            if (id == null)
-            {
-                return NotFound();
-            }
-
+            if (id == null) return NotFound();
             var product = await _context.Products.FindAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
+            if (product == null) return NotFound();
             return View(product);
         }
 
-        // POST: Products/Edit/5
         [HttpPost]
+        [RequireRole("admin", "empleado")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,Precio,Stock")] Product product)
         {
-           
+            var sanitizer = new HtmlSanitizer();
+            product.Descripcion = sanitizer.Sanitize(product.Descripcion);
 
-            if (id != product.Id)
-            {
-                return NotFound();
-            }
+            if (id != product.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -141,13 +111,9 @@ namespace appPedidos.Controllers
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!ProductExists(product.Id))
-                    {
                         return NotFound();
-                    }
                     else
-                    {
                         ModelState.AddModelError("", "Error de concurrencia al actualizar el producto.");
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -157,28 +123,17 @@ namespace appPedidos.Controllers
             return View(product);
         }
 
-        // GET: Products/Delete/5
+        [RequireRole("admin", "empleado")]
         public async Task<IActionResult> Delete(int? id)
         {
-           
-
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var product = await _context.Products
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-
+            if (id == null) return NotFound();
+            var product = await _context.Products.FirstOrDefaultAsync(m => m.Id == id);
+            if (product == null) return NotFound();
             return View(product);
         }
 
-        // POST: Products/Delete/5
         [HttpPost, ActionName("Delete")]
+        [RequireRole("admin", "empleado")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
@@ -195,8 +150,6 @@ namespace appPedidos.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
-
-
 
         private bool ProductExists(int id)
         {
